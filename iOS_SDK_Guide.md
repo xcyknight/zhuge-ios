@@ -1,15 +1,8 @@
-# IOS SDK 集成指南
+# iOS SDK 集成指南
 
 ## 安装SDK
-最简单的安装方式是使用[CocoaPods](http://cocoapods.org/)  
- 1. 安装CocoaPod `gem install cocoapods`  
- 2. 项目目录下创建`Podfile`文件，并加入一行代码: `pod 'Zhugeio'`  
- 3. 项目目录下执行`pod install`，CocoaPods会自动安装Zhuge SDK，并生成工作区文件*.xcworkspace，打开该工作区即可。
-
-你也可以直接下载来安装：  
- 1. 下载[SDK](https://github.com/zhugesdk/zhuge-ios)：  
- 2. 把`Zhuge`目录拖拽到项目中  
- 3. 安装所有依赖： 
+ 1. 把`Zhuge`目录拖拽到项目中  
+ 2. 安装所有依赖： 
     `UIKit`、`Foundation`、`SystemConfiguration`、`CoreTelephony`、`'Accelerate`、`CoreGraphics`、`QuartzCore`、`libz.dylib`
 
 ## 兼容性和ARC
@@ -26,9 +19,26 @@
 
  3. 我们鼓励调用identify方法加入自己的用户ID，这样可以把因版本升级等生成的多个ID合并到您自己统一的用户ID下。
  
+ 
+## 开启日志
+
+开启日志输出，请在Xcode中进行设置：
+```
+Build Settings > Apple LLVM 7.0 - Preprocessing > Preprocessor Macros > Debug : ZHUGE_LOG=1
+```
+
 
 ## 初始化
-在集成诸葛SDk时，您首先需要用AppKey启动。Appkey是在官网上创建项目时生成。
+
+在初始化之前，要先设置SDK数据的上传路径。否则数据将不会被收集。
+
+```
+NSString *url = @"";
+[[Zhuge sharedInstance] setUploadURL:url];
+```
+
+
+在应用的入口，初始化SDK。
 
 ```
 #import "Zhuge/Zhuge.h"
@@ -38,13 +48,11 @@
 }
 ```
 
-如果您需要修改SDK的默认设置，如打开日志打印、设置版本渠道等时，一定要在`startWithAppKey`前执行。参考代码：
+诸葛默认通过info.plist的`CFBundleShortVersionString`定义应用的版本，渠道默认为App Store。如果想自定义的话，一定要在`startWithAppKey`前进行设置。参考代码：
 
 ```
     Zhuge *zhuge = [Zhuge sharedInstance];
 
-    // 打开SDK日志打印
-    [zhuge.config setLogEnabled:YES]; // 默认关闭
     
     // 自定义应用版本
     [zhuge.config setAppVersion:@"0.9-beta"]; // 默认是info.plist中CFBundleShortVersionString值
@@ -101,64 +109,26 @@
     [[Zhuge sharedInstance] track:@"购物" properties: @{@"商家":@"京东"}];
 ```
 
-## 推送通知
-
-在startWithAppKey调用之前，指定开发环境或生产环境，同时注册APNS推送功能。
-
-```
-// 推送指定deviceToken上传到开发环境或生产环境，默认NO，上传到开发环境
-// 发布到Ad Hoc环境或App Store时，请指定为YES
-[zhuge.config setApsProduction:NO];
-
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_7_1
-    if ([[UIDevice currentDevice].systemVersion floatValue] >= 8.0) {
-        [zhuge registerForRemoteNotificationTypes:(UIUserNotificationTypeBadge |
-                                                       UIUserNotificationTypeSound |
-                                                       UIUserNotificationTypeAlert)
-                                           categories:nil];
-    } else {
-        [zhuge registerForRemoteNotificationTypes:(UIRemoteNotificationTypeBadge |
-                                                       UIRemoteNotificationTypeSound |
-                                                       UIRemoteNotificationTypeAlert)
-                                           categories:nil];
-    }
-#else
-        [zhuge registerForRemoteNotificationTypes:(UIRemoteNotificationTypeBadge |
-                                                       UIRemoteNotificationTypeSound |
-                                                       UIRemoteNotificationTypeAlert)
-                                           categories:nil];
-#endif
-zhuge
-```
-
-提交APNS注册后返回的deviceToken
-
-```
--(void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    [[Zhuge sharedInstance] registerDeviceToken:deviceToken];
-}
-
-```
-
-处理推送通知
-
-```
--(void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    [[Zhuge sharedInstance] handleRemoteNotification:userInfo];
-}
-```
 ## 第三方推送
 诸葛同时支持第三方推送，如果您正在使用第三方推送，请在startWithAppKey调用之后设置第三方推送的用户ID
 
 ```
 [zhuge setThirdPartyPushUserId:@"第三方推送的用户ID" forChannel:ZG_PUSH_CHANNEL_GETUI];
 ```
+##处理推送通知
+
+```
+-(void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    [[Zhuge sharedInstance] handleRemoteNotification:userInfo];
+}
+```
+
+
 ## 实时调试
 实时调试功能开启后，使用和操作设备或网站时，可以在实时调试平台看到所有的操作信息，以辅助开发者确认打点是否正确。
 
 **注意，实时调试过程中设备操作信息不会上传到应用数据中，调试完成，需要关闭debug。**
 
 	[zhuge.config setDebug:YES];
-
 
 
