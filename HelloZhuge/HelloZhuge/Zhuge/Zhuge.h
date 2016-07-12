@@ -7,8 +7,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "ZhugeConfig.h"
-#import "ShakeGesture.h"
-@interface Zhuge : NSObject<connectPro>
+@interface Zhuge : NSObject
 
 #pragma mark - 获取实例
 
@@ -23,12 +22,15 @@
 - (nonnull ZhugeConfig *)config;
 /**
  */
--(void)openGestureBindingUI;
+-(void)setUploadURL:(nonnull NSString*)url;
 
 /**
  获得诸葛设备ID。
  */
 - (nonnull NSString *)getDeviceId;
+/**
+ 获得诸葛会话ID
+ */
 -(nonnull NSString *)getSessionID;
 #pragma mark - 开启统计
 
@@ -57,14 +59,6 @@
  */
 - (void)track:(nonnull NSString *)event;
 - (void)track:(nonnull NSString *)event properties:(nullable NSDictionary *)properties;
-/**
- 开始追踪一个耗时事件，这个借口并不会真正的统计这个事件。当你调用endTrack时，会统计两个接口之间的耗时，
- 并作为一个属性添加到事件之中
- @param eventName 事件名称 
- */
--(void)stratTrack:(nonnull NSString *)eventName;
-
--(void)endTrack:(nonnull NSString *)eventName properties:(nullable NSDictionary *)properties;
 #pragma mark - 推送
 // 支持的第三方推送渠道
 typedef enum {
@@ -76,16 +70,10 @@ typedef enum {
     ZG_PUSH_CHANNEL_XIAOMI  = 6
 } ZGPushChannel;
 
-// 注册APNS远程消息类型
-- (void)registerForRemoteNotificationTypes:(UIRemoteNotificationType)types categories:(nullable NSSet*)categories;
-
-// 注册deviceToken
-- (void)registerDeviceToken:(nonnull NSData *)deviceToken;
 
 // 处理接收到的消息
 - (void)handleRemoteNotification:(nonnull NSDictionary *)userInfo;
 
 // 设置第三方推送用户ID
 - (void)setThirdPartyPushUserId:(nonnull NSString *)userId forChannel:(ZGPushChannel) channel;
-- (void)clearNotification;
 @end
