@@ -362,7 +362,7 @@ static Zhuge *sharedInstance = nil;
     
     NSString *uuid = nil;
     if (resultData != NULL)  {
-        uuid = [[NSString alloc] initWithData:objc_retainedObject(resultData) encoding:NSUTF8StringEncoding];
+        uuid = [[NSString alloc] initWithData:CFBridgingRelease(resultData) encoding:NSUTF8StringEncoding];
     }
     
     CFRelease(query);

@@ -42,8 +42,6 @@
 // 是否开启实时调试(默认:关闭)
 @property (nonatomic) BOOL debug;
 
-// 是否开启无码打点（默认：关闭）
-@property (nonatomic) BOOL openGestureBindingUI;
 
 // 是否推送到生产环境，默认YES(推送时指定deviceToken上传到开发环境或生产环境)
 @property (nonatomic) BOOL apsProduction;
