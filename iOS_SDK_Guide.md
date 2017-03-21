@@ -1,34 +1,33 @@
-# iOS SDK 集成指南
+---
+诸葛3.0-iOS集成开发指南
+---
 
-## 安装SDK
- 1. 把`Zhuge`目录拖拽到项目中  
- 2. 安装所有依赖： 
-    `UIKit`、`Foundation`、`SystemConfiguration`、`CoreTelephony`、`'Accelerate`、`CoreGraphics`、`QuartzCore`、`libz.dylib`
+##1. 安装SDK
+最简单的安装方式是使用[CocoaPods](http://cocoapods.org/)  
+ 1. 安装CocoaPod `gem install cocoapods`  
+ 2. 项目目录下创建`Podfile`文件，并加入一行代码: `pod 'Zhugeio'`  
+ 3. 项目目录下执行`pod install`，CocoaPods会自动安装Zhuge SDK，并生成工作区文件*.xcworkspace，打开该工作区即可。
 
-## 兼容性和ARC
- 1. 诸葛SDK仅支持iOS 6.0以上系统，您需要使用Xcode 5和IOS 7.0及以上开发环境进行编译，如果您的版本较低，强烈建议升级。  
+你也可以直接下载来安装：  
+ 1. 下载[SDK](http://sdk.zhugeio.com/Zhuge_iOS_SDK.zip)：  
+ 2. 把`Zhugeio`目录拖拽到项目中  
+ 3. 安装所有依赖： 
+    `UIKit`、`Foundation`、`libz.tbd`
+
+##2. 兼容性和ARC
+ 1. 诸葛SDK仅支持iOS 7.0以上系统，您需要使用Xcode 5和IOS 7.0及以上开发环境进行编译，如果您的版本较低，强烈建议升级。  
  2. 诸葛SDK默认采用ARC，如果您的项目没有采用ARC，您需要在编译(`Build Phases -> Compile Sources`)时，为每个Zhuge文件标识为`-fobj-arc`。
 
-## 诸葛用户追踪ID方案
+##3. 诸葛用户追踪ID方案
  1. 诸葛首选采用IDFA作为用户追踪的ID，这需要您的应用安装`AdSupport`依赖包。
  2. 如果您的应用中没有广告，采用IDFA可能会审核被拒，请在编译时加入`ZHUGE_NO_ADID`标志，诸葛将会采用IDFV作为追踪的ID。  
-   xcode设置方法:  
+   XCode设置方法:  
    ```
 	Build Settings > Apple LLVM 6.0 - Preprocessing > Processor Macros > Release : ZHUGE_NO_ADID=1
 	```
-
- 3. 我们鼓励调用identify方法加入自己的用户ID，这样可以把因版本升级等生成的多个ID合并到您自己统一的用户ID下。
  
- 
-## 开启日志
 
-开启日志输出，请在Xcode中进行设置：
-```
-Build Settings > Apple LLVM 7.0 - Preprocessing > Preprocessor Macros > Debug : ZHUGE_LOG=1
-```
-
-
-## 初始化
+##4. 初始化
 
 在初始化之前，要先设置SDK数据的上传路径。否则数据将不会被收集。
 
@@ -37,8 +36,7 @@ NSString *url = @"";
 [[Zhuge sharedInstance] setUploadURL:url];
 ```
 
-
-在应用的入口，初始化SDK。
+用你的应用的AppKey启动诸葛io SDK。
 
 ```
 #import "Zhuge/Zhuge.h"
@@ -48,10 +46,15 @@ NSString *url = @"";
 }
 ```
 
-诸葛默认通过info.plist的`CFBundleShortVersionString`定义应用的版本，渠道默认为App Store。如果想自定义的话，一定要在`startWithAppKey`前进行设置。参考代码：
+如果您需要修改SDK的默认设置，如设置版本渠道时，一定要在`startWithAppKey`前执行。参考代码：
 
 ```
     Zhuge *zhuge = [Zhuge sharedInstance];
+
+    // 实时调试开关
+    // 设置为YES，可在诸葛io的「实时调试」页面实时观察事件数据上传
+    // 建议仅在需要时打开，调试完成后，请及时关闭
+    [zhuge.config setDebug : NO];
 
     
     // 自定义应用版本
@@ -65,70 +68,177 @@ NSString *url = @"";
 
 ```
 
-## 识别用户身份
-您可以通过调用`identify:properties:`来记录用户身份信息。
+##5. 识别用户
+为了保持对用户的跟踪，你需要为每一位用户记录一个唯一的ID，你可以使用用户id、email等唯一值来作为用户在诸葛io的ID。 另外，你可以在跟踪用户的时候， 记录用户更多的属性信息，便于你更了解你的用户：
 
 ```
-    NSMutableDictionary *user = [NSMutableDictionary dictionary];
-    user[@"name"] = @"zhuge";
-    user[@"gender"] = @"男";
-    user[@"birthday"] = @"2014/11/11";
-    user[@"avatar"] = @"http://tp2.sinaimg.cn/2885710157/180/5637236139/1";
-    user[@"email"] = @"hello@zhuge.io";
-    user[@"mobile"] = @"18901010101";
-    user[@"qq"] = @"91919";
-    user[@"weixin"] = @"121212";
-    user[@"weibo"] = @"122222";
-    user[@"location"] = @"北京朝阳区";
-    user[@"公司"] = @"37degree";
-    [[Zhuge sharedInstance] identify:@"1234" properties:user];
+    //定义诸葛io中的用户ID
+    NSString *userId = [user getUserId]
+    
+    //定义属性
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    userInfo[@"name"] = @"zhuge";
+    userInfo[@"gender"] = @"男";
+    userInfo[@"birthday"] = @"2014/11/11";
+    userInfo[@"avatar"] = @"http://tp2.sinaimg.cn/2885710157/180/5637236139/1";
+    userInfo[@"email"] = @"hello@zhuge.io";
+    userInfo[@"mobile"] = @"18901010101";
+    userInfo[@"qq"] = @"91919";
+    userInfo[@"weixin"] = @"121212";
+    userInfo[@"weibo"] = @"122222";
+    userInfo[@"location"] = @"北京朝阳区";
+    userInfo[@"公司"] = @"37degree";
+    [[Zhuge sharedInstance] identify:userId properties:userInfo];
 ```
-##### 预定义的属性：
-
-为了便于分析和页面显示，我们抽取了一些共同的属性，要统计以下数据时，可按照下面格式填写。 
-
-|属性Key     | 说明        | 
-|--------|-------------|
-|name    | 名称|
-|gender  | 性别(值:男,女)|
-|birthday| 生日(格式: yyyy/MM/dd)|
-|avatar   | 头像地址|
-|email   | 邮箱|
-|mobile   | 手机号|
-|qq      | QQ账号|
-|weixin  | 微信账号|
-|weibo   | 微博账号|
-|location   | 地域，如北京|
 
 **长度限制**:Key最长支持25个字符，Value最长支持255个字符，一个汉字按3个字符计算。
 
-## 自定义事件
-您可以通过调用`track:properties:`来跟踪自定义事件。
+##6. 自定义事件
+你可以在`startWithAppKey `之后开始记录事件（用户行为），并可记录与该事件相关的属性信息
 
 ```
-    [[Zhuge sharedInstance] track:@"购物" properties: @{@"商家":@"京东"}];
+    //定义与事件相关的属性信息  
+	NSMutableDictionary *properties = [NSMutableDictionary dictionary];  
+	properties[@"视频名称"] = @"冰与火之歌";
+	properties[@"分类"] = @"奇幻";
+	properties[@"时间"] = @"5:10pm";
+	properties[@"来源"] = @"首页"; 
+	//记录事件
+	[[Zhuge sharedInstance] track:@"观看视频" properties: 	properties];   
 ```
 
-## 第三方推送
-诸葛同时支持第三方推送，如果您正在使用第三方推送，请在startWithAppKey调用之后设置第三方推送的用户ID
+## 7.时长事件的统计
+
+若您希望统计一个事件发生的时长，比如视频的播放，页面的停留，那么可以调用如下接口来进行：
 
 ```
-[zhuge setThirdPartyPushUserId:@"第三方推送的用户ID" forChannel:ZG_PUSH_CHANNEL_GETUI];
+Zhuge *zhuge = [Zhuge sharedInstance];
+NSString *eventName = @"";
+[zhuge startTrack:eventName];
 ```
-##处理推送通知
+说明：调用`startTrack`来开始一个事件的统计，eventName为一个事件的名称
 
 ```
--(void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    [[Zhuge sharedInstance] handleRemoteNotification:userInfo];
+Zhuge *zhuge = [Zhuge sharedInstance];
+NSString *eventName = @"";
+NSDictionary *pro = [NSDictionary dictionary];
+[zhuge endTrack:eventName properties:pro];
+```
+
+说明：调用`endTrack`来记录事件的持续时长。调用`endTrack`之前，相同eventName的事件必须已经调用过`startTrack`，否则这个接口不会产生任何事件。
+
+
+代码示例：
+
+```
+Zhuge *zhuge = [Zhuge sharedInstance];
+NSString *eventName = @"观看视频";
+
+//视频播放开始
+[zhuge startTrack:eventName];
+...
+//视频观看结束
+NSDictionary *pro = [NSDictionary dictionary];
+pro[@"名称"] = @"非诚勿扰";
+pro[@"期数"] = @"2016-11-02";
+[zhuge endTrack:eventName properties:pro];
+```
+***注意：***startTrack与endTrack必须成对出现（eventName一致），单独调用一个接口是无效的。
+
+## 8.在UIWebView中进行统计
+
+如果你的页面中使用了**UIWebView**嵌入HTML,js 的代码，并且希望统计HTML中的事件，那么可以通过下面的文档来进行跨平台的统计。注意如果你的HTML是运行在浏览器的，那么还是无法统计的，下文仅针对使用**UIWebView**加载网页的情况。
+
+* Object C代码集成
+
+  首先要找到您的UIWevView的UIWebViewDelegate对象，并在`webViewDidFinishLoad `时做如下处理:
+  
+  ```java 
+  
+	#import <JavaScriptCore/JavaScriptCore.h>
+	#import "ZhugeJS.h"
+	
+	
+	-(void)webViewDidFinishLoad:(UIWebView *)webView{
+
+    JSContext *jsContext = [webView valueForKeyPath:@"documentView.webView.mainFrame.javaScriptContext"];
+    jsContext[@"zhuge"] = [[ZhugeJS alloc] init];
+    jsContext.exceptionHandler = ^(JSContext *context, JSValue *exceptionValue) {
+        context.exception = exceptionValue;
+        NSLog(@"异常信息：%@", exceptionValue);
+    };
 }
+
+  ```
+  
+* js代码统计
+
+  集成了Object C代码之后，您就可以在js代码中进行统计：
+  
+  ```js
+  var name = 'click';
+  var pro = {'名称':'iPhone',
+  				'分类':'手机'
+  				};
+  zhuge.trackProperty(name,JSON.stringify(pro)); 
+  ```
+  
+  类似的，用户标识可以这样：
+  
+  ```
+  var uid = '123@11.com';
+  var pro = {'name':'Jack',
+  				'gender':'male'
+  				};
+  zhuge.identifyProperty(uid,JSON.stringify(pro));
+  
+  ```
+
+##9. 设置自定义属性
+
+* 事件自定义属性
+
+```
+ [Zhuge setSuperProperty:(NSDictionary *) pro];
+```
+若有一些属性对于您来说，每一个事件都要拥有，那么您可以调用``setSuperProperty ``将它传入。之后，每一个经过`track`,`endTrack`传入的事件，都将自动获得这些属性。
+
+* 设备自定义属性
+
+```
+[Zhuge setPlatform:(NSDictionary *) pro];
 ```
 
+诸葛默认展示的设备信息包含一些硬件信息，如系统版本，设备分辨率，设备制造商等。若您希望在展示设备信息时展示一些额外的信息，那么可以调用``setPlatform``传入，我们会将这些信息添加在设备信息中。
 
-## 实时调试
-实时调试功能开启后，使用和操作设备或网站时，可以在实时调试平台看到所有的操作信息，以辅助开发者确认打点是否正确。
+  
+  
 
-**注意，实时调试过程中设备操作信息不会上传到应用数据中，调试完成，需要关闭debug。**
 
-	[zhuge.config setDebug:YES];
+##10. 其他可选API
 
+*  `[[Zhuge sharedInstance] getDid]`  您可以通过这个接口来获取当前设备在诸葛体系下的设备标识
+
+* `[[Zhuge sharedInstance] getSid]`  您可以通过这个接口来获得当前应用所属的会话ID
+
+    
+* 实时调试
+
+	你可以使用诸葛io提供的**实时调试**功能来查看实时布点数据，并确认是否准确
+
+使用方法：
+	
+在诸葛统计初始化之前，调用如下代码，以开启实时调试（注意：建议仅在测试设备上开启）：
+
+``` Java
+[[Zhuge sharedInstance] setDebug:YES]
+```
+
+  然后在诸葛io中打开**实时调试**页面，即可实时查看上传的数据.
+
+### 日志输出
+
+要在xcode控制台查看诸葛io SDK输入的日志，请在最新版的xcode中设置：
+
+`Build Settings > Apple LLVM 7.0 - Preprocessing > Preprocessor Macros > Debug : ZHUGE_LOG=1`
 

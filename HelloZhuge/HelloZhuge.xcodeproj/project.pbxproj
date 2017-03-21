@@ -21,6 +21,7 @@
 		DCBA2D631C05A6A300F866E7 /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = DCBA2D621C05A6A300F866E7 /* libicucore.tbd */; };
 		DCBA2D651C05A6AE00F866E7 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = DCBA2D641C05A6AE00F866E7 /* libz.tbd */; };
 		DCBA2D671C05A6B800F866E7 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCBA2D661C05A6B800F866E7 /* CoreMotion.framework */; };
+		DCEF52381E80DCDC004DD670 /* ZhugeJS.m in Sources */ = {isa = PBXBuildFile; fileRef = DCEF52371E80DCDC004DD670 /* ZhugeJS.m */; };
 		E55E515A1A242BF100ED0263 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E55E51591A242BF100ED0263 /* main.m */; };
 		E55E515D1A242BF100ED0263 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E55E515C1A242BF100ED0263 /* AppDelegate.m */; };
 		E55E51601A242BF100ED0263 /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E55E515F1A242BF100ED0263 /* HomeViewController.m */; };
@@ -64,6 +65,8 @@
 		DCBA2D641C05A6AE00F866E7 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		DCBA2D661C05A6B800F866E7 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		DCCB1A0D1B6632EA00B9E517 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		DCEF52361E80DCDC004DD670 /* ZhugeJS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZhugeJS.h; sourceTree = "<group>"; };
+		DCEF52371E80DCDC004DD670 /* ZhugeJS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZhugeJS.m; sourceTree = "<group>"; };
 		E55E51541A242BF100ED0263 /* HelloZhuge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloZhuge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E55E51581A242BF100ED0263 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E55E51591A242BF100ED0263 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -116,6 +119,8 @@
 		DCBA2CC11C05A35100F866E7 /* Zhuge */ = {
 			isa = PBXGroup;
 			children = (
+				DCEF52361E80DCDC004DD670 /* ZhugeJS.h */,
+				DCEF52371E80DCDC004DD670 /* ZhugeJS.m */,
 				DCBA2CC21C05A35100F866E7 /* Base64.h */,
 				DCBA2CC31C05A35100F866E7 /* Base64.m */,
 				DCBA2CC41C05A35100F866E7 /* Compres.h */,
@@ -311,6 +316,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DCEF52381E80DCDC004DD670 /* ZhugeJS.m in Sources */,
 				E55E51631A242BF100ED0263 /* DiscoveryViewController.m in Sources */,
 				DCBA2D521C05A35100F866E7 /* Zhuge.m in Sources */,
 				E55E515D1A242BF100ED0263 /* AppDelegate.m in Sources */,

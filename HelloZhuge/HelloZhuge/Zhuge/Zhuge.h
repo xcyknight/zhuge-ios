@@ -20,20 +20,17 @@
  获得诸葛配置实例。
  */
 - (nonnull ZhugeConfig *)config;
-/**
- */
--(void)setUploadURL:(nonnull NSString*)url;
 
 /**
  获得诸葛设备ID。
  */
-- (nonnull NSString *)getDeviceId;
-/**
- 获得诸葛会话ID
- */
--(nonnull NSString *)getSessionID;
+- (nonnull NSString *)getDid;
+-(nonnull NSString *)getSid;
 #pragma mark - 开启统计
 
+/**
+ */
+-(void)setUploadURL:(nonnull NSString*)url;
 /**
  开启诸葛统计。
  
@@ -45,11 +42,24 @@
 
 /**
  标识用户。
- 
  @param userId     用户ID
  @param properties 用户属性
  */
 - (void)identify:(nonnull NSString*)userId properties:(nullable   NSDictionary *)properties;
+
+/**
+ userID不变，仅更新用户属性
+ @param properties 属性
+ */
+-(void)updateIdentify:(nonnull NSDictionary *)properties;
+
+/**
+ 设置事件环境信息，通过这个地方存入的信息将会给之后传入的每一个事件添加环境信息
+ */
+-(void) setSuperProperty:(nonnull NSDictionary *)info;
+
+-(void) setPlatform:(nonnull NSDictionary *)info;
+- (void)track:(nonnull NSString *)event;
 
 /**
  追踪自定义事件。
@@ -57,8 +67,15 @@
  @param event      事件名称
  @param properties 事件属性
  */
-- (void)track:(nonnull NSString *)event;
 - (void)track:(nonnull NSString *)event properties:(nullable NSDictionary *)properties;
+/**
+ 开始追踪一个耗时事件，这个借口并不会真正的统计这个事件。当你调用endTrack时，会统计两个接口之间的耗时，
+ 并作为一个属性添加到事件之中
+ @param eventName 事件名称
+ */
+-(void)startTrack:(nonnull NSString *)eventName;
+
+-(void)endTrack:(nonnull NSString *)eventName properties:(nullable NSDictionary *)properties;
 #pragma mark - 推送
 // 支持的第三方推送渠道
 typedef enum {
