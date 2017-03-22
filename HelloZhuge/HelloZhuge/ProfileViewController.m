@@ -16,7 +16,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    NSString * did = [[Zhuge sharedInstance] getDeviceId];
+    NSString * did = [[Zhuge sharedInstance] getDid];
     if (did) {
         self.uid.text = [did substringToIndex:6];
     }

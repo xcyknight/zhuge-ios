@@ -29,7 +29,7 @@
     // 推送指定deviceToken上传到开发环境或生产环境，默认YES，上传到生产环境
     [zhuge.config setApsProduction:NO];
 
-    [zhuge setUploadURL:@"www.zhuge.com"];
+    [zhuge setUploadURL:@"http://47.93.77.224:80/apipool/"];
     // 开启推送
 //#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_7_1
 //    if ([[UIDevice currentDevice].systemVersion floatValue] >= 8.0) {
@@ -51,7 +51,7 @@
 //#endif
 //    
     // 启动诸葛
-    [zhuge startWithAppKey:@"f05e0a67082f460f9fadb50b61040733" launchOptions:launchOptions];
+    [zhuge startWithAppKey:@"523957a4e10c46f98b9a68ab94d0ac5b" launchOptions:launchOptions];
     [zhuge.config setDebug:YES]; // 默认关闭
 
     // 第三方推送(启用第三方推送时，请在startWithAppKey后调用)
