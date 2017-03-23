@@ -67,7 +67,6 @@ static Zhuge *sharedInstance = nil;
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
             sharedInstance = [[super alloc] init];
-            sharedInstance.apiURL = @"https://u.zhugeapi.com";
             sharedInstance.config = [[ZhugeConfig alloc] init];
             sharedInstance.eventTimeDic = [[NSMutableDictionary alloc]init];
         });
