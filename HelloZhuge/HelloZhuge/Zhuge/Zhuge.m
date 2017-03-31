@@ -25,6 +25,7 @@
 
 @interface Zhuge ()
 @property (nonatomic, copy) NSString *apiURL;
+@property (nonatomic, copy) NSString *backupURL;
 @property (nonatomic, copy) NSString *appKey;
 @property (nonatomic, copy) NSString *userId;
 @property (nonatomic, copy) NSString *deviceId;
@@ -106,7 +107,7 @@ static Zhuge *sharedInstance = nil;
             [self.config setSendInterval:2];
         }
         if (!self.apiURL || self.apiURL.length ==0) {
-            ZhugeDebug(@"请调用[[Zhuge sharedInstance] setUploadURL:url]设置上传地址。");
+            ZhugeDebug(@"请调用[[Zhuge sharedInstance] setUploadURL:url backupUrl:backUrl]设置上传地址。");
         }
         [self setupListeners];
         [self unarchive];
@@ -118,14 +119,14 @@ static Zhuge *sharedInstance = nil;
         ZhugeDebug(@"startWithAppKey exception");
     }
 }
--(void)setUploadURL:(NSString *)url{
+-(void)setUploadURL:(NSString *)url andBackupUrl:(NSString *)backupUrl{
     
     if (url && url.length>0) {
         self.apiURL = url;
+        self.backupURL = backupUrl;
     }else{
         ZGLog(@"传入的url不合法，请检查:%@",url);
     }
-    
 }
 #pragma mark - 诸葛配置
 -(void)setSuperProperty:(NSDictionary *)info{
@@ -569,6 +570,7 @@ static Zhuge *sharedInstance = nil;
                 pr[@"$dru"] = dru;
                 pr[@"$net"] = self.net;
                 pr[@"$mnet"]= self.radio;
+                pr[@"$ov"] = [[UIDevice currentDevice] systemVersion];
                 pr[@"$sid"] = self.sessionId;
                 pr[@"$vn"] = self.config.appVersion;
                 e[@"pr"] = pr;
@@ -615,6 +617,9 @@ static Zhuge *sharedInstance = nil;
         if (!start) {
             ZhugeDebug(@"end track event name not found ,have you called startTrack already?");
             return;
+        }
+        if (!self.sessionId) {
+            [self sessionStart];
         }
         [self.eventTimeDic removeObjectForKey:eventName];
         NSNumber *end = @([[NSDate date] timeIntervalSince1970]);
@@ -1021,8 +1026,14 @@ static Zhuge *sharedInstance = nil;
     int  retry = 0;
     NSData *responseData = nil;
     while (!success && retry < 3) {
-        NSURL *URL = [NSURL URLWithString:self.apiURL];
-        ZhugeDebug(@"api request url = %@ , retry = %d",self.apiURL,retry);
+        NSString *realUrl;
+        if (retry>0 && self.backupURL) {
+            realUrl = self.backupURL;
+        }else{
+            realUrl = self.apiURL;
+        }
+        NSURL *URL = [NSURL URLWithString:realUrl];
+        ZhugeDebug(@"api request url = %@ , retry = %d",realUrl,retry);
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
         [request setValue:@"gzip" forHTTPHeaderField:@"Accept-Encoding"];
         [request setHTTPMethod:@"POST"];

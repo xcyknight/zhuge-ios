@@ -30,7 +30,7 @@
 
 /**
  */
--(void)setUploadURL:(nonnull NSString*)url;
+-(void)setUploadURL:(nonnull NSString*)url andBackupUrl:(nullable NSString *)backupUrl;
 /**
  开启诸葛统计。
  
