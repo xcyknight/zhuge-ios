@@ -162,7 +162,7 @@ pro[@"期数"] = @"2016-11-02";
 	-(void)webViewDidFinishLoad:(UIWebView *)webView{
 
     JSContext *jsContext = [webView valueForKeyPath:@"documentView.webView.mainFrame.javaScriptContext"];
-    jsContext[@"zhuge"] = [[ZhugeJS alloc] init];
+    jsContext[@"zhugeTracker"] = [[ZhugeJS alloc] init];
     jsContext.exceptionHandler = ^(JSContext *context, JSValue *exceptionValue) {
         context.exception = exceptionValue;
         NSLog(@"异常信息：%@", exceptionValue);
@@ -180,7 +180,7 @@ pro[@"期数"] = @"2016-11-02";
   var pro = {'名称':'iPhone',
   				'分类':'手机'
   				};
-  zhuge.trackProperty(name,JSON.stringify(pro)); 
+  zhugeTracker.trackProperty(name,JSON.stringify(pro)); 
   ```
   
   类似的，用户标识可以这样：
@@ -190,7 +190,7 @@ pro[@"期数"] = @"2016-11-02";
   var pro = {'name':'Jack',
   				'gender':'male'
   				};
-  zhuge.identifyProperty(uid,JSON.stringify(pro));
+  zhugeTracker.identifyProperty(uid,JSON.stringify(pro));
   
   ```
 
