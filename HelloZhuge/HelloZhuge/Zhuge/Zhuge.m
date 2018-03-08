@@ -115,7 +115,7 @@ static Zhuge *sharedInstance = nil;
         if (launchOptions && launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey]) {
             [self trackPush:launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey] type:@"launch"];
         }
-//        [self sessionStart];
+        [self sessionStart];
     }
     @catch (NSException *exception) {
         ZhugeDebug(@"startWithAppKey exception %@",exception);
@@ -156,10 +156,7 @@ static Zhuge *sharedInstance = nil;
 }
 
 - (NSString *)getSid {
-    if (!self.sessionId) {
-        [self sessionStart];
-    }
-    return [NSString stringWithFormat:@"%@", self.sessionId] ;
+    return self.sessionId ? [NSString stringWithFormat:@"%@", self.sessionId] : @"0";
 }
 
 // 监听网络状态和应用生命周期
