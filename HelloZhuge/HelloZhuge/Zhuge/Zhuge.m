@@ -123,16 +123,16 @@ static Zhuge *sharedInstance = nil;
 }
 
 #pragma mark - 诸葛配置
--(void)setUploadURL:(NSString *)url andBackupUrl:(NSString *)backupUrl{
+- (void)setUploadURL:(NSString *)url andBackupUrl:(NSString *)backupUrl {
     
     if (url && url.length>0) {
         self.apiURL = url;
         self.backupURL = backupUrl;
-    }else{
+    } else {
         ZhugeDebug(@"传入的url不合法，请检查:%@",url);
     }
 }
--(void)setSuperProperty:(NSDictionary *)info{
+- (void)setSuperProperty:(NSDictionary *)info {
 
     if (!self.envInfo) {
         self.envInfo = [NSMutableDictionary dictionary];
@@ -140,7 +140,7 @@ static Zhuge *sharedInstance = nil;
     self.envInfo[@"event"] = info;
 }
 
--(void)setPlatform:(NSDictionary *)info{
+- (void)setPlatform:(NSDictionary *)info {
     if (!self.envInfo) {
         self.envInfo = [NSMutableDictionary dictionary];
     }
@@ -154,13 +154,14 @@ static Zhuge *sharedInstance = nil;
     
     return self.deviceId;
 }
--(NSString *)getSid{
-    
+
+- (NSString *)getSid {
     if (!self.sessionId) {
-        self.sessionId = @0;
+        [self sessionStart];
     }
     return [NSString stringWithFormat:@"%@", self.sessionId] ;
 }
+
 // 监听网络状态和应用生命周期
 - (void)setupListeners{
     BOOL reachabilityOk = NO;
