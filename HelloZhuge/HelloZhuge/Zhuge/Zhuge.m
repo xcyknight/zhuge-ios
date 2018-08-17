@@ -43,11 +43,11 @@
 @property (nonatomic, strong) NSString *cr;
 @property (nonatomic, strong)NSMutableDictionary *eventTimeDic;
 @property (nonatomic, strong)NSMutableDictionary *envInfo;
-
-
+@property (nonatomic) BOOL isForeground;
 @end
 
 @implementation Zhuge
+static NSUncaughtExceptionHandler *previousHandler;
 
 static void ZhugeReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info) {
     if (info != NULL && [(__bridge NSObject*)info isKindOfClass:[Zhuge class]]) {
@@ -79,6 +79,10 @@ static Zhuge *sharedInstance = nil;
 - (ZhugeConfig *)config {
     return _config;
 }
+-(void)startWithAppKey:(NSString *)appKey andDid:(NSString *)did launchOptions:(NSDictionary *)launchOptions{
+    self.deviceId = did;
+    [self startWithAppKey:appKey launchOptions:launchOptions];
+}
 - (void)startWithAppKey:(NSString *)appKey launchOptions:(NSDictionary *)launchOptions{
     @try {
         if (appKey == nil || [appKey length] == 0) {
@@ -87,7 +91,6 @@ static Zhuge *sharedInstance = nil;
         }
         self.appKey = appKey;
         self.userId = @"";
-        self.deviceId = [self defaultDeviceId];
         self.deviceToken = @"";
         self.sessionId = nil;
         self.net = @"";
@@ -115,13 +118,71 @@ static Zhuge *sharedInstance = nil;
         if (launchOptions && launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey]) {
             [self trackPush:launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey] type:@"launch"];
         }
+
+        if (!self.deviceId) {
+            self.deviceId = [self defaultDeviceId];
+        }
+        if (self.config.exceptionTrack) {
+            previousHandler = NSGetUncaughtExceptionHandler();
+            NSSetUncaughtExceptionHandler(&ZhugeUncaughtExceptionHandler);
+        }
+        
         [self sessionStart];
     }
     @catch (NSException *exception) {
         ZhugeDebug(@"startWithAppKey exception %@",exception);
     }
 }
+-(void)trackException:(NSException *) exception{
+    NSArray * arr = [exception callStackSymbols];
+    NSString * reason = [exception reason]; // 崩溃的原因  可以有崩溃的原因(数组越界,字典nil,调用未知方法...) 崩溃的控制器以及方法
+    NSString * name = [exception name];
+    NSMutableString *stack = [NSMutableString string];
+    long sum = 0;
+    for (NSString *ele in arr) {
+        sum = sum + ele.length;
+        if ((sum + 5) >256) {
+            break;
+        }
+        [stack appendString:[ele stringByReplacingOccurrencesOfString:@" " withString:@""]];
+        [stack appendString:@" \n "];
+    }
+    NSMutableDictionary *pr = [self eventData];
+    pr[@"$异常名称"]=name;
+    pr[@"$异常描述"]=reason;
+    pr[@"$异常进程名称"]= [[NSProcessInfo processInfo] processName];
 
+    pr[@"$应用包名"] = [[NSBundle mainBundle] bundleIdentifier];
+    pr[@"$出错堆栈"] = stack;
+    pr[@"$前后台状态"] = self.isForeground?@"前台":@"后台";
+    pr[@"$eid"] = @"崩溃";
+    NSMutableDictionary *e = [NSMutableDictionary dictionary];
+    e[@"dt"] = @"abp";
+    e[@"pr"] = pr;
+    NSArray *events = @[e];
+    NSString *eventData = [self encodeAPIData:[self wrapEvents:events]];
+
+    ZhugeDebug(@"上传崩溃事件：%@",eventData);
+    NSData *eventDataBefore = [eventData dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *zlibedData = [eventDataBefore zgZlibDeflate];
+
+    NSString *event = [zlibedData zgBase64EncodedString];
+    NSString *result = [[event stringByReplacingOccurrencesOfString:@"\r" withString:@""] stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+
+    NSString *requestData = [NSString stringWithFormat:@"method=event_statis_srv.upload&compress=1&event=%@", result];
+
+    NSData *response = [self apiRequest:@"/APIPOOL/" WithData:requestData andError:nil];
+    if (!response) {
+        ZhugeDebug(@"上传事件失败");
+    }
+    if (previousHandler) {
+        previousHandler(exception);
+    }
+}
+// 出现崩溃时的回调函数
+void ZhugeUncaughtExceptionHandler(NSException * exception){
+    [[Zhuge sharedInstance]trackException:exception];
+}
 #pragma mark - 诸葛配置
 - (void)setUploadURL:(NSString *)url andBackupUrl:(NSString *)backupUrl {
     
@@ -157,6 +218,11 @@ static Zhuge *sharedInstance = nil;
 
 - (NSString *)getSid {
     return self.sessionId ? [NSString stringWithFormat:@"%@", self.sessionId] : @"0";
+}
+
+- (void)setSessionId:(NSNumber *)sessionId {
+    _sessionId = sessionId;
+    if (self.onSidChanged) self.onSidChanged();
 }
 
 // 监听网络状态和应用生命周期
@@ -217,6 +283,7 @@ static Zhuge *sharedInstance = nil;
 #pragma mark - 应用生命周期
 - (void)applicationDidBecomeActive:(NSNotification *)notification {
     @try {
+        self.isForeground = YES;
         [self sessionStart];
         [self uploadDeviceInfo];
         [self startFlushTimer];
@@ -229,6 +296,7 @@ static Zhuge *sharedInstance = nil;
 
 - (void)applicationWillResignActive:(NSNotification *)notification {
     @try {
+        self.isForeground = NO;
         [self sessionEnd];
         [self stopFlushTimer];
     }
@@ -521,7 +589,7 @@ static Zhuge *sharedInstance = nil;
     }
     common[@"$cr"]  = self.cr;
     //毫秒偏移量
-    common[@"$ct"]  =  [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970] *1000];
+    common[@"$ct"]  =  [NSNumber numberWithUnsignedLongLong:[[NSDate date] timeIntervalSince1970] *1000];
     common[@"$tz"] = [NSNumber numberWithInteger:[[NSTimeZone localTimeZone] secondsFromGMT]*1000];//取毫秒偏移量
     common[@"$os"] = @"iOS";
     return common;
@@ -637,6 +705,13 @@ static Zhuge *sharedInstance = nil;
             dic[@"$dru"] = [NSNumber numberWithUnsignedLongLong:(end.doubleValue - start.doubleValue)*1000];
             dic[@"$eid"] = eventName;
             [dic addEntriesFromDictionary:[self eventData]];
+            if (self.envInfo) {
+                NSDictionary *info = [self.envInfo objectForKey:@"event"];
+                if (info) {
+                    NSMutableDictionary *data = [self addSymbloToDic:info];
+                    [dic addEntriesFromDictionary:data];
+                }
+            }
             NSMutableDictionary *e = [NSMutableDictionary dictionaryWithCapacity:2];
             [e setObject:dic forKey:@"pr"];
             [e setObject:@"evt" forKey:@"dt"];
@@ -1152,7 +1227,7 @@ static Zhuge *sharedInstance = nil;
     }
 }
 
-- (id)unarchiveFromFile:(NSString *)filePath {
+- (id)unarchiveFromFile:(NSString *)filePath deleteFile:(BOOL) delete{
     id unarchivedData = nil;
     @try {
         unarchivedData = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
@@ -1161,18 +1236,20 @@ static Zhuge *sharedInstance = nil;
         ZhugeDebug(@"恢复数据失败");
         unarchivedData = nil;
     }
-    if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
+    if (delete && [[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
         NSError *error;
         BOOL removed = [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
         if (!removed) {
             ZhugeDebug(@"删除数据失败 %@", error);
+        }else{
+            ZhugeDebug(@"删除缓存数据 %@",filePath);
         }
     }
     return unarchivedData;
 }
 
 -(void)unarchiveEnvironmentInfo{
-    self.envInfo = (NSMutableDictionary *)[[self unarchiveFromFile:[self environmentInfoFilePath]] mutableCopy];
+    self.envInfo = (NSMutableDictionary *)[[self unarchiveFromFile:[self environmentInfoFilePath] deleteFile:NO] mutableCopy];
     if (self.envInfo) {
         if([self.envInfo objectForKey:@"event"]){
             ZhugeDebug(@"全局自定义事件信息：%@",self.envInfo[@"event"]);
@@ -1182,17 +1259,19 @@ static Zhuge *sharedInstance = nil;
     }
 }
 - (void)unarchiveEvents {
-    self.eventsQueue = (NSMutableArray *)[[self unarchiveFromFile:[self eventsFilePath]] mutableCopy];
+    self.eventsQueue = (NSMutableArray *)[[self unarchiveFromFile:[self eventsFilePath] deleteFile:YES] mutableCopy];
     if (!self.eventsQueue) {
         self.eventsQueue = [NSMutableArray array];
     }
 }
 
 - (void)unarchiveProperties {
-    NSDictionary *properties = (NSDictionary *)[self unarchiveFromFile:[self propertiesFilePath]];
+    NSDictionary *properties = (NSDictionary *)[self unarchiveFromFile:[self propertiesFilePath] deleteFile:NO];
     if (properties) {
         self.userId = properties[@"userId"] ? properties[@"userId"] : @"";
-        self.deviceId = properties[@"deviceId"] ? properties[@"deviceId"] : [self defaultDeviceId];
+        if (!self.deviceId) {
+            self.deviceId = properties[@"deviceId"] ? properties[@"deviceId"] : [self defaultDeviceId];
+        }
         self.sessionId = properties[@"sessionId"] ? properties[@"sessionId"] : nil;
         
         NSDateFormatter *DateFormatter=[[NSDateFormatter alloc] init];

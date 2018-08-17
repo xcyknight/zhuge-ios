@@ -7,7 +7,7 @@
 #import <Foundation/Foundation.h>
 
 /* SDK版本 */
-#define ZG_SDK_VERSION @"3.1.6"
+#define ZG_SDK_VERSION @"3.2.2"
 
 /* 默认应用版本 */
 #define ZG_APP_VERSION [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"]
@@ -45,6 +45,7 @@
 // 是否开启会话追踪(默认:开启)
 @property (nonatomic) BOOL sessionEnable;
 
+@property (nonatomic) BOOL exceptionTrack;
 // 是否开启实时调试(默认:关闭)
 @property (nonatomic) BOOL debug;
 
