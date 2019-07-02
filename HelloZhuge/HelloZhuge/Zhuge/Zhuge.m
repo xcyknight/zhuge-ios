@@ -120,7 +120,7 @@ static Zhuge *sharedInstance = nil;
         }
 
         if (!self.deviceId) {
-            self.deviceId = [self defaultDeviceId];
+            self.deviceId = [self defaultDeviceId:NO];
         }
         if (self.config.exceptionTrack) {
             previousHandler = NSGetUncaughtExceptionHandler();
@@ -210,7 +210,7 @@ void ZhugeUncaughtExceptionHandler(NSException * exception){
 
 - (NSString *)getDid {
     if (!self.deviceId) {
-        self.deviceId = [self defaultDeviceId];
+        self.deviceId = [self defaultDeviceId:NO];
     }
     
     return self.deviceId;
@@ -343,13 +343,18 @@ void ZhugeUncaughtExceptionHandler(NSException * exception){
 #pragma mark - 设备ID
 
 // 设备ID
-- (NSString *)defaultDeviceId {
-    // IDFA
-    NSString *deviceId = [self adid];
+- (NSString *)defaultDeviceId:(BOOL)useIDFA {
     
-    // IDFV from KeyChain
-    if (!deviceId) {
-        deviceId = [self idFromKeyChain];
+    NSString *deviceId = nil;
+    
+    if (useIDFA) {
+        // IDFA
+        deviceId = [self adid];
+        
+        // IDFV from KeyChain
+        if (!deviceId) {
+            deviceId = [self idFromKeyChain];
+        }
     }
     
     if (!deviceId) {
@@ -1270,7 +1275,7 @@ void ZhugeUncaughtExceptionHandler(NSException * exception){
     if (properties) {
         self.userId = properties[@"userId"] ? properties[@"userId"] : @"";
         if (!self.deviceId) {
-            self.deviceId = properties[@"deviceId"] ? properties[@"deviceId"] : [self defaultDeviceId];
+            self.deviceId = properties[@"deviceId"] ? properties[@"deviceId"] : [self defaultDeviceId:NO];
         }
         self.sessionId = properties[@"sessionId"] ? properties[@"sessionId"] : nil;
         
