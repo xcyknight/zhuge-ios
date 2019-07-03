@@ -30,7 +30,7 @@
  获取SessionID
  */
 - (nonnull NSString *)getSid;
-@property (nonatomic, copy) void (^onSidChanged)();
+@property (nonatomic, copy) void (^ _Nullable onSidChanged)();
 
 #pragma mark - 开启统计
 /**
@@ -45,7 +45,7 @@
  */
 - (void)startWithAppKey:(nonnull NSString*)appKey launchOptions:(nullable NSDictionary*)launchOptions;
 
--(void)startWithAppKey:(nonnull NSString *)appKey andDid:(nonnull NSString*)did launchOptions:(NSDictionary *)launchOptions;
+-(void)startWithAppKey:(nonnull NSString *)appKey andDid:(nonnull NSString*)did launchOptions:(nullable NSDictionary *)launchOptions;
 #pragma mark - 追踪用户行为
 
 /**
